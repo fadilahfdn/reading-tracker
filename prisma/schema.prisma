@@ -1,0 +1,21 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// model untuk tabel buku di database PostgreSQL
+model Book {
+  id        Int      @id @default(autoincrement())
+  title     String
+  author    String
+  status    String   @default("unread") // Nilai bawaan jika tidak diisi: unread, reading, completed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
