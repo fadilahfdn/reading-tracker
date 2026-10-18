@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../config/db');
 const authenticateToken = require('../middleware/authMiddleware');
+const bookController = require('../controllers/bookController');
+
+// Cari buku dari internet via Open Library API
+router.get('/search', authenticateToken, bookController.searchExternalBook);
 
 // Mengambil semua data buku HANYA milik user yang sedang login
 router.get('/', authenticateToken, async (req, res) => {
