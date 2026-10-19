@@ -31,6 +31,11 @@ model Book {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Core Tracker halaman membaca
+  startPage   Int @default(0)
+  endPage     Int @default(0)
+  currentPage Int @default(0) // Posisi halaman terakhir yang dibaca
+
   // kolom penampung ID pemilik buku
   userId  Int
 
