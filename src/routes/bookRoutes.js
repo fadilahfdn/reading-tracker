@@ -7,6 +7,9 @@ const bookController = require('../controllers/bookController');
 // Cari buku dari internet via Open Library API
 router.get('/search', authenticateToken, bookController.searchExternalBook);
 
+// UPDATE PROGRESS: Mengubah posisi halaman membaca terakhir
+router.put('/:bookId/progress', authenticateToken, bookController.updateReadingProgress);
+
 // Mengambil semua data buku HANYA milik user yang sedang login
 router.get('/', authenticateToken, async (req, res) => {
     try {

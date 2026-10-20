@@ -73,4 +73,4 @@ const updateReadingProgress = async (req, res) => {
     }
 };
 
-module.exports = { searchExternalBook };
+module.exports = { searchExternalBook, updateReadingProgress };
