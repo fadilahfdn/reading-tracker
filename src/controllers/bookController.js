@@ -43,18 +43,28 @@ const searchExternalBook = async (req, res) => {
 
 // memperbarui progress halaman membaca
 const updateReadingProgress = async (req, res) => {
-    const { bookId } = req.params;
+    const bookIdParsed = parseInt(req.params.bookId, 10);
     const { currentPage } = req.body;
 
     if (currentPage === undefined || currentPage < 0) {
-        return res.status(400).json({ meesage: "Halaman membaca saat ini wajib diisi dengan benar!" });
+        return res.status(400).json({ message: "Halaman membaca saat ini wajib diisi dengan benar!" });
+    }
+
+    // Validasi jika konversi ID gagal / bukan angka
+    if (isNaN(bookIdParsed)) {
+        return res.status(400).json({ message: "ID Buku harus berupa angka yang valid!" });
     }
 
     try {
         // ambil data buku untuk memeriksa total halaman
         const book = await prisma.book.findUnique({
-            where: { id: parseInt(bookId) }
+            where: { id: bookIdParsed }
         });
+
+        // Validasi kepemilikan buku
+        if (!book || book.userId !== req.user.userId) {
+            return res.status(404).json({ message: "Buku tidak ditemukan atau Anda tidak memiliki akses!" });
+        }
 
         if (currentPage > book.endPage) {
             return res.status(400).json({ message: `Halaman tidak boleh melebihi total halaman buku (${book.endPage} hal)!` });
@@ -68,15 +78,15 @@ const updateReadingProgress = async (req, res) => {
         }
 
         // Update data ke PostgreSQL
-        const updateBook = await prisma.book.update({
-            where: { id: parseInt(bookId) },
+        const updatedBook = await prisma.book.update({
+            where: { id: bookIdParsed },
             data: {
-                currentPage: currentPage,
+                currentPage: parseInt(currentPage, 10),
                 status: newStatus
             }
         });
 
-        res.json({
+        return res.json({
             message: newStatus === "completed" ? "Selamat! Anda telah menyelesaikan buku ini!" : "Progress membaca berhasil diperbarui.",
             book: updatedBook
         });
