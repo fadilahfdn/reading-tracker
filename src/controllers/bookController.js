@@ -10,22 +10,34 @@ const searchExternalBook = async (req, res) => {
     }
 
     try {
-        // Menembak Open Library API dengan batasan hasil maksimal 5 buku
-        const response = await axios.get(`https://openlibrary.org{encodeURIComponent(title)}&limit=5`);
+        const response = await axios.get('https://openlibrary.org/search.json', {
+            params: {
+                q: title.trim(),
+                limit: 5,
+                fields: 'key,title,author_name,number_of_pages_median,cover_i'
+            },
+            timeout: 5000
+        });
 
-        // mapping hasil response agar format datanya rapi dan bersih
-        const books = response.data.docs.map(doc => ({
-            title: doc.title,
-            author: doc.author_name ? doc.author_name.join(', ') : 'Unknown Author',
-            endPage: doc.number_of_pages_median || doc.number_of_pages || 0
+        const docs = response.data?.docs ?? [];
+
+        const results = docs.map(doc => ({
+            externalId: doc.key,
+            title: doc.title || 'Untitled',
+            author: Array.isArray(doc.author_name) ? doc.author_name.join(', ') : 'Unknown Author',
+            totalPages: doc.number_of_pages_median ?? null,
+            coverUrl: doc.cover_i
+                ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+                : null
         }));
 
         res.json({
-            message: "Pencarian berhasil!",
-            results: books
+            message: results.length ? 'Pencarian berhasil!' : 'Buku tidak ditemukan',
+            results
         });
     } catch (error) {
-        res.status(500).json({ error: "Gagal mengambil data dari Open Library API" });
+        console.error('searchExternalBook error:', error.message);
+        res.status(502).json({ message: 'Gagal mengambil data dari Open Library API' });
     }
 };
 
