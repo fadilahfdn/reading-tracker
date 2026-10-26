@@ -95,4 +95,65 @@ const updateReadingProgress = async (req, res) => {
     }
 };
 
-module.exports = { searchExternalBook, updateReadingProgress };
+// Mengambil semua data buku HANYA milik user yang sedang aktif
+const getAllBooks = async (req, res) => {
+    try {
+        const books = await prisma.book.findMany({
+            where: { userId: req.user.userId }
+        });
+        res.json(books);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal mengambil data buku" });
+    }
+};
+
+// Menambahkan buku baru yang otomatis terikat dengan user yang login
+const addBook = async (req, res) => {
+    const { title, author, startPage, endPage } = req.body;
+
+    if (!title || !author) {
+        return res.status(400).json({ message: "Judul dan penulis wajib diisi!" });
+    }
+
+    try {
+        const newBook = await prisma.book.create({
+            data: {
+                title,
+                author,
+                startPage: startPage || 0,
+                endPage: endPage || 0,
+                currentPage: startPage || 0,
+                status: startPage > 0 ? "reading" : "unread",
+                userId: req.user.userId
+            }
+        });
+        res.status(201).json(newBook);
+    } catch (error) {
+        res.status(500).json({ error: "Gagal menyimpan buku baru" });
+    }
+};
+
+// Menghapus buku tertentu berdasarkan ID
+const deleteBook = async (req, res) => {
+    const { bookId } = req.params;
+
+    try {
+        const book = await prisma.book.findUnique({
+            where: { id: parseInt(bookId) }
+        });
+
+        if (!book || book.userId !== req.user.userId) {
+            return res.status(404).json({ message: "Buku tidak ditemukan atau Anda tidak memiliki akses!" });
+        }
+
+        await prisma.book.delete({
+            where: { id: parseInt(bookId) }
+        });
+
+        res.json({ message: `Buku "${book.title}" berhasil dihapus dari library Anda!` });
+    } catch (error) {
+        res.status(500).json({ error: "Gagal menghapus data buku" });
+    }
+};
+
+module.exports = { searchExternalBook, updateReadingProgress, getAllBooks, addBook, deleteBook };
