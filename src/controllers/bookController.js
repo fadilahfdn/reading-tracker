@@ -115,15 +115,24 @@ const addBook = async (req, res) => {
         return res.status(400).json({ message: "Judul dan penulis wajib diisi!" });
     }
 
+    // Memastikan input adalah angka, fallback ke 0 jika kosong
+    const start = parseInt(startPage, 10) || 0;
+    const end = parseInt(endPage, 10) || 0;
+
+    // Validasi hal.: Cegah endPage lebih kecil dari startPage jika user mengisi target hal.
+    if (end > 0 && end < start) {
+        return res.status(400).json({ message: "Halaman akhir (endPage) tidak boleh lebih kecil dari halaman awal (startPage)!" });
+    }
+
     try {
         const newBook = await prisma.book.create({
             data: {
                 title,
                 author,
-                startPage: startPage || 0,
-                endPage: endPage || 0,
-                currentPage: startPage || 0,
-                status: startPage > 0 ? "reading" : "unread",
+                startPage: start,
+                endPage: end,
+                currentPage: start,
+                status: "unread",
                 userId: req.user.userId
             }
         });
@@ -136,10 +145,16 @@ const addBook = async (req, res) => {
 // Menghapus buku tertentu berdasarkan ID
 const deleteBook = async (req, res) => {
     const { bookId } = req.params;
+    const bookIdParsed = parseInt(bookId, 10);
+
+    // Cegah Prisma crash jika bookId bukan angka
+    if (isNaN(bookIdParsed)) {
+        return res.status(400).json({ message: "ID Buku tidak valid!" });
+    }
 
     try {
         const book = await prisma.book.findUnique({
-            where: { id: parseInt(bookId) }
+            where: { id: bookIdParsed }
         });
 
         if (!book || book.userId !== req.user.userId) {
@@ -147,7 +162,7 @@ const deleteBook = async (req, res) => {
         }
 
         await prisma.book.delete({
-            where: { id: parseInt(bookId) }
+            where: { id: bookIdParsed }
         });
 
         res.json({ message: `Buku "${book.title}" berhasil dihapus dari library Anda!` });
