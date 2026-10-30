@@ -109,7 +109,7 @@ const getAllBooks = async (req, res) => {
 
 // Menambahkan buku baru yang otomatis terikat dengan user yang login
 const addBook = async (req, res) => {
-    const { title, author, startPage, endPage } = req.body;
+    const { title, author, startPage, endPage, coverUrl } = req.body;
 
     if (!title || !author) {
         return res.status(400).json({ message: "Judul dan penulis wajib diisi!" });
@@ -133,6 +133,7 @@ const addBook = async (req, res) => {
                 endPage: end,
                 currentPage: start,
                 status: "unread",
+                coverUrl: coverUrl || null,
                 userId: req.user.userId
             }
         });
