@@ -172,4 +172,28 @@ const deleteBook = async (req, res) => {
     }
 };
 
-module.exports = { searchExternalBook, updateReadingProgress, getAllBooks, addBook, deleteBook };
+// Endpoint khusus untuk memperbarui Rating dan Ulasan
+const addRating = async (req, res) => {
+  const { id } = req.params;
+  const { rating, review } = req.body;
+
+  try {
+    const updatedBook = await prisma.book.update({
+      where: { id: parseInt(id) }, // Pastikan mencari ID buku yang tepat
+      data: { 
+        rating: parseInt(rating) || 0, 
+        review: review || "" 
+      }
+    });
+    
+    res.status(200).json({ 
+      message: "Ulasan berhasil disimpan!", 
+      book: updatedBook 
+    });
+  } catch (error) {
+    console.error("Error updating review:", error);
+    res.status(500).json({ message: "Terjadi kesalahan pada server saat menyimpan ulasan." });
+  }
+};
+
+module.exports = { searchExternalBook, updateReadingProgress, getAllBooks, addBook, deleteBook, addRating };

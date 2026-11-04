@@ -39,6 +39,9 @@ model Book {
   // kolom penampung ID pemilik buku
   userId  Int
 
+  rating      Int?     @default(0) 
+  review      String?  @db.Text
+
   // definisi relasi ke tabel User
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

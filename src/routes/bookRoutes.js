@@ -22,6 +22,9 @@ router.post('/', bookController.addBook);
 // Menghapus buku tertentu berdasarkan ID
 router.delete('/:bookId', bookController.deleteBook);
 
+// Menghapus buku tertentu berdasarkan ID
+router.put('/:id/review', authenticateToken, bookController.addRating);
+
 module.exports = router;
 
 
