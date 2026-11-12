@@ -71,19 +71,34 @@ const updateReadingProgress = async (req, res) => {
         }
 
         let newStatus = "reading";
+        let updateData = {
+            currentPage: parseInt(currentPage, 10)
+        };
+
         if (currentPage === book.endPage && book.endPage > 0) {
             newStatus = "completed";
+            if (!book.completedAt) {
+                updateData.completedAt = new Date();
+            }
         } else if (currentPage === 0) {
             newStatus = "unread";
+            updateData.startedAt = null;
+            updateData.completedAt = null;
+        } else {
+            if (!book.startedAt) {
+                updateData.startedAt = new Date();
+            }
+            if (book.completedAt) {
+                updateData.completedAt = null;
+            }
         }
+        
+        updateData.status = newStatus;
 
         // Update data ke PostgreSQL
         const updatedBook = await prisma.book.update({
             where: { id: bookIdParsed },
-            data: {
-                currentPage: parseInt(currentPage, 10),
-                status: newStatus
-            }
+            data: updateData
         });
 
         return res.json({
@@ -134,7 +149,8 @@ const addBook = async (req, res) => {
                 currentPage: start,
                 status: "unread",
                 coverUrl: coverUrl || null,
-                userId: req.user.userId
+                userId: req.user.userId,
+                startedAt: start > 0 ? new Date() : null
             }
         });
         res.status(201).json(newBook);
